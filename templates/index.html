@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fish Feeder Log</title>
+</head>
+<body>
+    <h1>Fish Feeding Schedule</h1>
+    <div id="feedLog"></div>
+    <p>Last fed: <span id="lastFedTime"></span> ago</p>
+
+    <button onclick="logFeed()">Log Feed</button>
+
+    <script>
+        function logFeed() {
+            fetch('/log_feed', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user: 'SomeUser' })  // Modify as needed
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateFeedLog(); // Refresh the feed log
+                }
+            });
+        }
+    
+        function updateFeedLog() {
+            let feedLogElement = document.getElementById('feedLog');
+            let lastFedTimeElement = document.getElementById('lastFedTime');
+
+            fetch('/feed_log_data')
+                .then(response => response.json())
+                .then(data => {
+                    feedLogElement.innerHTML = '';
+                    let lastFedTime = null;
+
+                    data.feed_log.forEach(log => {
+                        let logTime = new Date(log.time);
+                        if (!lastFedTime || logTime > lastFedTime) {
+                            lastFedTime = logTime;
+                        }
+                        feedLogElement.innerHTML += `<p>${log.user} fed the fish at ${log.time}</p>`;
+                    });
+
+                    if (lastFedTime) {
+                        updateLastFedTime(lastFedTime);
+                    }
+                });
+        }
+
+        function updateLastFedTime(lastFedTime) {
+            let now = new Date();
+            let diff = now - lastFedTime;
+            let minutes = Math.floor(diff / 60000);
+            let lastFedString = minutes > 0 ? `${minutes} minutes` : 'Just now';
+            document.getElementById('lastFedTime').textContent = lastFedString;
+        }
+
+        // Update log and timer every 10 seconds
+        setInterval(updateFeedLog, 10000);
+        updateFeedLog();
+    </script>
+</body>
+</html>
