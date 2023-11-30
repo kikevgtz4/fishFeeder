@@ -3,12 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <title>Fish Feeder Log</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #nextFeedTime {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        #feedLog {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
     <h1>Fish Feeding Schedule</h1>
-    <div id="feedLog"></div>
+    <p>Time until next feed: <span id="nextFeedTime"></span></p>
     <p>Last fed: <span id="lastFedTime"></span> ago</p>
-
+    <div id="feedLog"></div>
     <button onclick="logFeed()">Log Feed</button>
 
     <script>
@@ -18,7 +43,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ user: 'SomeUser' })  // Modify as needed
+                body: JSON.stringify({ user: 'SomeUser' })
             })
             .then(response => response.json())
             .then(data => {
@@ -31,6 +56,7 @@
         function updateFeedLog() {
             let feedLogElement = document.getElementById('feedLog');
             let lastFedTimeElement = document.getElementById('lastFedTime');
+            let nextFeedTimeElement = document.getElementById('nextFeedTime');
 
             fetch('/feed_log_data')
                 .then(response => response.json())
@@ -38,7 +64,7 @@
                     feedLogElement.innerHTML = '';
                     let lastFedTime = null;
 
-                    data.feed_log.forEach(log => {
+                    data.feed_log.sort((a, b) => new Date(b.time) - new Date(a.time)).forEach(log => {
                         let logTime = new Date(log.time);
                         if (!lastFedTime || logTime > lastFedTime) {
                             lastFedTime = logTime;
@@ -48,6 +74,7 @@
 
                     if (lastFedTime) {
                         updateLastFedTime(lastFedTime);
+                        updateNextFeedTime(lastFedTime, nextFeedTimeElement);
                     }
                 });
         }
@@ -60,8 +87,18 @@
             document.getElementById('lastFedTime').textContent = lastFedString;
         }
 
+        function updateNextFeedTime(lastFedTime, element) {
+            const feedInterval = 8 * 60 * 60000; // 12 hours in milliseconds
+            let now = new Date();
+            let nextFeed = new Date(lastFedTime.getTime() + feedInterval);
+            let timeUntilNextFeed = nextFeed - now;
+            let hours = Math.floor(timeUntilNextFeed / 3600000);
+            let minutes = Math.floor((timeUntilNextFeed % 3600000) / 60000);
+            element.textContent = `${hours} hours and ${minutes} minutes`;
+        }
+
         // Update log and timer every 10 seconds
-        setInterval(updateFeedLog, 10000);
+        setInterval(updateFeedLog, 5000);
         updateFeedLog();
     </script>
 </body>
