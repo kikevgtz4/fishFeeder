@@ -36,7 +36,20 @@
     <div id="feedLog"></div>
     <button onclick="logFeed()">Log Feed</button>
 
+    <p>
+        Set hours for next feed:
+        <select id="feedInterval">
+            <option value="4">4 hours</option>
+            <option value="8">8 hours</option>
+            <option value="12">12 hours</option>
+            <option value="24">24 hours</option>
+        </select>
+        <button onclick="setFeedInterval()">Set Interval</button>
+    </p>
+
     <script>
+        let feedInterval = 8 * 60 * 60000; // Default interval in milliseconds
+
         function logFeed() {
             fetch('/log_feed', {
                 method: 'POST',
@@ -88,13 +101,18 @@
         }
 
         function updateNextFeedTime(lastFedTime, element) {
-            const feedInterval = 8 * 60 * 60000; // 12 hours in milliseconds
             let now = new Date();
             let nextFeed = new Date(lastFedTime.getTime() + feedInterval);
             let timeUntilNextFeed = nextFeed - now;
             let hours = Math.floor(timeUntilNextFeed / 3600000);
             let minutes = Math.floor((timeUntilNextFeed % 3600000) / 60000);
             element.textContent = `${hours} hours and ${minutes} minutes`;
+        }
+
+        function setFeedInterval() {
+            let selectedInterval = document.getElementById('feedInterval').value;
+            feedInterval = parseInt(selectedInterval) * 60 * 60000; // Convert hours to milliseconds
+            updateFeedLog(); // Immediately reflect the change
         }
 
         // Update log and timer every 10 seconds

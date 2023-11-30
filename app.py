@@ -3,6 +3,7 @@
 from flask import Flask, render_template, jsonify, request
 from pymongo import MongoClient
 import datetime
+from datetime import datetime, timezone
 import os
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
@@ -34,7 +35,7 @@ def log_feed():
     else:  # POST request
         data = request.json
 
-    data['time'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    data['time'] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     feed_collection.insert_one(data)
     return jsonify(success=True)
 
